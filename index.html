@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Noche Perfecta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      background: #1a1a2e;
+      color: #fff;
+    }
+
+    /* FONDO */
+    #bg {
+      position: fixed;
+      inset: -15%;
+      width: 130%; height: 130%;
+      background-image: url('Noche_perfecta.png');
+      background-size: cover;
+      background-position: center;
+      filter: blur(50px) brightness(0.4) saturate(1.6);
+      z-index: 0;
+      animation: bgBreath 16s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgBreath {
+      0%   { transform: scale(1) translate(0px, 0px); }
+      100% { transform: scale(1.05) translate(-6px, -4px); }
+    }
+
+    #bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: rgba(0,0,0,0.22);
+    }
+
+    /* =============================================
+       LANDING
+    ============================================= */
+    #screen-landing {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    #screen-landing.saliendo {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    .landing-cover {
+      width: min(240px, 58vw);
+      height: min(240px, 58vw);
+      border-radius: 18px;
+      background-image: url('Noche_perfecta.png');
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.65);
+      animation: coverFloat 8s ease-in-out infinite;
+    }
+
+    @keyframes coverFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .landing-title {
+      margin-top: 1.8rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .landing-artist {
+      margin-top: 0.3rem;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    #btn-entrar {
+      margin-top: 2.5rem;
+      padding: 0.85rem 2.8rem;
+      border-radius: 100px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.92);
+      color: #000;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    #btn-entrar:hover  { background: #fff; transform: scale(1.03); }
+    #btn-entrar:active { transform: scale(0.97); }
+
+
+
+    /* =============================================
+       REPRODUCTOR — layout Apple Music
+    ============================================= */
+    #screen-player {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    #screen-player.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* Columna izquierda — sin bordes ni sombras para una unión limpia */
+    .col-player {
+      position: relative;
+      z-index: 2;
+      width: 340px;
+      min-width: 280px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 3rem 2rem 2rem 2.5rem;
+      height: 100%;
+    }
+
+    #btn-close {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.5rem;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      transition: background 0.2s;
+    }
+    #btn-close:hover { background: rgba(255,255,255,0.22); }
+
+    .player-cover {
+      width: 100%;
+      max-width: 260px;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background-image: url('Noche_perfecta.png');
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 20px 55px rgba(0,0,0,0.6);
+      flex-shrink: 0;
+      animation: coverFloat 10s ease-in-out infinite;
+    }
+
+    .player-meta {
+      margin-top: 1.4rem;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+
+    .player-meta-text { flex: 1; min-width: 0; }
+
+    .player-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .player-artist {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.15rem;
+    }
+
+    /* Progreso */
+    .progress-wrap {
+      margin-top: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    #progressBar {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 3px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.25);
+      outline: none;
+      cursor: pointer;
+    }
+
+    #progressBar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .progress-times {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.4rem;
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.38);
+    }
+
+    /* Controles — estilo Apple Music */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .ctrl {
+      background: none;
+      border: none;
+      outline: none;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      padding: 0.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s ease, transform 0.18s ease, opacity 0.2s ease;
+      z-index: 5;
+      border-radius: 50%;
+    }
+
+    .ctrl:hover  { color: #fff; transform: scale(1.1); }
+    .ctrl:active { transform: scale(0.9); }
+    .ctrl:focus  { outline: none; }
+
+    /* Controles secundarios (shuffle, repeat): más pequeños */
+    .ctrl.secondary { color: rgba(255,255,255,0.45); }
+    .ctrl.secondary:hover { color: rgba(255,255,255,0.8); }
+
+    .ctrl svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; display: block; }
+
+    /* Play: círculo blanco relleno, grande */
+    #btn-play {
+      width: 54px; height: 54px;
+      border-radius: 50%;
+      background: #fff;
+      color: #000;
+      padding: 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    #btn-play:hover  { transform: scale(1.06); box-shadow: 0 6px 28px rgba(0,0,0,0.45); color: #000; }
+    #btn-play:active { transform: scale(0.94); }
+    #btn-play svg { width: 24px; height: 24px; fill: #000; }
+
+    /* Volumen */
+    .volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1rem;
+      flex-shrink: 0;
+    }
+
+    .vol-icon { font-size: 0.8rem; color: rgba(255,255,255,0.35); }
+
+    #volumeBar {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 3px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.25);
+      outline: none;
+      cursor: pointer;
+    }
+
+    #volumeBar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* Botón letras — ícono burbuja estilo Apple Music */
+    #btn-lyrics {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.55);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    #btn-lyrics.visible { display: flex; }
+    #btn-lyrics.activo  { background: rgba(255,255,255,0.22); color: #fff; }
+    #btn-lyrics:hover   { background: rgba(255,255,255,0.2); transform: scale(1.06); }
+
+    #btn-lyrics svg { width: 18px; height: 18px; fill: currentColor; pointer-events: none; }
+
+    /* Marca de agua global — esquina inferior derecha */
+    #brand-watermark {
+      position: fixed;
+      bottom: 2.2rem;
+      right: 2.5rem;
+      z-index: 50;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 0.72rem;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      pointer-events: none;
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    #brand-watermark.visible { opacity: 1; }
+
+    /* =============================================
+       COLUMNA DERECHA: letras — centradas, fluidas
+    ============================================= */
+
+    /* El panel ocupa el resto del espacio y no tiene
+       ningún borde ni fondo — se funde con el bg global */
+    .col-lyrics {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s ease;
+      overflow: hidden;
+      /* Sin ningún borde ni background propio */
+      background: transparent;
+      border: none;
+      outline: none;
+    }
+
+    .col-lyrics.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* Fades arriba y abajo — solo para suavizar extremos,
+       sin tocar los lados (nada de fade izquierdo) */
+    .col-lyrics::before,
+    .col-lyrics::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      height: 120px;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .col-lyrics::before {
+      top: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%);
+    }
+    .col-lyrics::after {
+      bottom: 0;
+      background: linear-gradient(0deg, rgba(0,0,0,0.55) 0%, transparent 100%);
+    }
+
+    /* Ventana de 5 líneas — centrada en el panel */
+    #lyrics-window {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.55rem;
+    }
+
+    /* Cada slot — animación fluida tipo Spotify/Apple */
+    .lw-line {
+      width: 100%;
+      cursor: pointer;
+      transition:
+        transform  0.7s cubic-bezier(0.34, 1.2, 0.64, 1),
+        opacity    0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .lw-line span {
+      display: block;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+      transition:
+        color       0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        font-size   0.65s cubic-bezier(0.34, 1.1, 0.64, 1),
+        font-weight 0.5s  cubic-bezier(0.4, 0, 0.2, 1),
+        opacity     0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        text-shadow 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        letter-spacing 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* LÍNEA ACTIVA: grande, blanca, brillante */
+    .lw-line[data-pos="0"] {
+      opacity: 1;
+    }
+    .lw-line[data-pos="0"] span {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.025em;
+      text-shadow: 0 0 40px rgba(255,255,255,0.22);
+    }
+
+    /* INMEDIATAMENTE ANTES/DESPUÉS */
+    .lw-line[data-pos="1"],
+    .lw-line[data-pos="-1"] {
+      opacity: 1;
+    }
+    .lw-line[data-pos="1"] span,
+    .lw-line[data-pos="-1"] span {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: -0.01em;
+    }
+
+    /* MÁS LEJOS: muy tenues */
+    .lw-line[data-pos="2"],
+    .lw-line[data-pos="-2"] {
+      opacity: 1;
+    }
+    .lw-line[data-pos="2"] span,
+    .lw-line[data-pos="-2"] span {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0em;
+    }
+
+    /* Musical intro */
+    .lw-line.musical[data-pos="0"] span {
+      font-size: 1.25rem;
+      letter-spacing: 0.12em;
+    }
+
+    /* By Anthony */
+    .lw-line.final[data-pos="0"] span {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.35rem;
+    }
+
+    /* Responsive móvil */
+    @media (max-width: 680px) {
+      #screen-player.visible { flex-direction: column; }
+      .col-player { width: 100%; min-width: unset; padding: 2.5rem 1.5rem 0.5rem; height: auto; flex-shrink: 0; }
+      .player-cover { width: 140px; max-width: 140px; margin: 0 auto; }
+      .col-lyrics { flex: 1; padding: 2rem 1.8rem; width: 100%; }
+      .lw-line[data-pos="0"] span { font-size: 1.3rem; }
+      .lw-line[data-pos="1"] span,
+      .lw-line[data-pos="-1"] span { font-size: 0.92rem; }
+      .lw-line[data-pos="2"] span,
+      .lw-line[data-pos="-2"] span { font-size: 0.78rem; }
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="bg-overlay"></div>
+
+<!-- LANDING -->
+<div id="screen-landing">
+  <div class="landing-cover"></div>
+  <div class="landing-title">Noche Perfecta</div>
+  <div class="landing-artist">Fuerza Regida · Calle 24</div>
+  <button id="btn-entrar">Reproducir música</button>
+</div>
+
+<!-- REPRODUCTOR -->
+<div id="screen-player">
+  <div class="col-player">
+    <button id="btn-close">✕</button>
+    <div class="player-cover"></div>
+    <div class="player-meta">
+      <div class="player-meta-text">
+        <div class="player-title">Noche Perfecta</div>
+        <div class="player-artist">Fuerza Regida — Calle 24</div>
+      </div>
+      <!-- Botón letras: ícono burbuja estilo Apple Music -->
+      <button id="btn-lyrics" title="Ver letra">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="progress-wrap">
+      <input type="range" id="progressBar" min="0" max="100" value="0" step="0.1"/>
+      <div class="progress-times">
+        <span id="tActual">0:00</span>
+        <span id="tTotal">0:00</span>
+      </div>
+    </div>
+    <div class="controls">
+      <!-- Shuffle -->
+      <button class="ctrl secondary" id="btn-shuffle" title="Aleatorio">
+        <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17zm4.76-.55l3.65 3.38-3.65 3.38V14h-1.93l-1.4-1.41 1.41-1.41L14.41 12l-2.35-2.34L13.47 8.2c.37.37.93.37 1.29 0l.59-.58zM14.41 13l-1.41 1.41 1.4 1.41H16v1.17l3.65-3.38L16 9.83V11h-1.52l-1.4 1.41zM4 18.59l5.17-5.17 1.41 1.41L5.41 20z"/></svg>
+      </button>
+      <!-- Anterior -->
+      <button class="ctrl" id="btn-prev">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <!-- Play/Pausa -->
+      <button class="ctrl" id="btn-play">
+        <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <!-- Siguiente -->
+      <button class="ctrl" id="btn-next">
+        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 4V8zM16 6h2v12h-2z"/></svg>
+      </button>
+      <!-- Repeat -->
+      <button class="ctrl secondary" id="btn-repeat" title="Repetir">
+        <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>
+      </button>
+    </div>
+    <div class="volume-wrap">
+      <span class="vol-icon">🔈</span>
+      <input type="range" id="volumeBar" min="0" max="1" step="0.01" value="0.85"/>
+      <span class="vol-icon">🔊</span>
+    </div>
+  </div>
+
+  <!-- Letras -->
+  <div class="col-lyrics" id="col-lyrics">
+    <div id="lyrics-window"></div>
+  </div>
+</div>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+  /* ---- CONFIGURACIÓN ---- */
+  var ARCHIVO_AUDIO = "Calle 24, Fuerza Regida - Noche Perfecta (Official).mp3";
+
+  /* ---- LETRA CON TIEMPOS ---- */
+  var LETRA = [
+    { t:   1, txt: "♪  ♫",                                                             estilo: "musical" },
+    { t:  26, txt: "Hoy es la noche perfecta" },
+    { t:  30, txt: "Ya alístese, mi reina, que hoy la sacaré a pasear" },
+    { t:  36, txt: "Quiero cantarle unas canciones, rozando sus labios" },
+    { t:  43, txt: "Que no se pueda resistir a quererme besar" },
+    { t:  48, txt: "Hoy es la noche perfecta" },
+    { t:  52, txt: "Vamos a recorrer tomando toda la ciudad" },
+    { t:  59, txt: "Arrímese, no muerdo, nomás en la intimidad" },
+    { t:  65, txt: "Dígame si cree en el amor, pero ese del real" },
+    { t:  70, txt: "Hoy voy a conquistarla como nadie lo ha hecho" },
+    { t:  77, txt: "Y voy a enamorarla hasta poder tenerla dormida en mi pecho" },
+    { t:  83, txt: "Hoy voy a conquistarla, eso está más que hecho" },
+    { t:  90, txt: "Por usted soy su esclavo, soy su mandadero y hasta su pendejo" },
+    { t:  99, txt: "Ahí te va, chiqueona" },
+    { t: 103, txt: "Qué tal y si nos subimos a la sierrita" },
+    { t: 105, txt: "Y compramos un seicito" },
+    { t: 108, txt: "Y ahí despuesito vemos si me da un besito" },
+    { t: 113, txt: "Así suena la Calle 24, chiquitita" },
+    { t: 122, txt: "Hoy es la noche perfecta" },
+    { t: 126, txt: "No sé si sepa, pero soy bien terco y yo la quiero a usted" },
+    { t: 133, txt: "Acurrúquese en mis brazos, yo la cuidaré" },
+    { t: 139, txt: "Hacerla sentir que está amando por primera vez" },
+    { t: 144, txt: "Hoy voy a conquistarla como nadie lo ha hecho" },
+    { t: 151, txt: "Hoy voy a enamorarla hasta poder tenerla dormida en mi pecho" },
+    { t: 157, txt: "Hoy voy a conquistarla, eso está más que hecho" },
+    { t: 164, txt: "Por usted soy tu esclavo, soy tu mandadero y hasta tu pendejo" },
+    { t: 171, txt: "Uh" },
+    { t: 173, txt: "Y nomás por ti, mi niña" },
+    { t: 175, txt: "Fuerza Regida." },
+    { t: 180, txt: "ANTIFY-LYRICS ☊ .", estilo: "final" },
+  ];
+
+  /* ---- ELEMENTOS ---- */
+  var screenLanding = document.getElementById("screen-landing");
+  var screenPlayer  = document.getElementById("screen-player");
+  var colLyrics     = document.getElementById("col-lyrics");
+  var btnEntrar     = document.getElementById("btn-entrar");
+  var btnClose      = document.getElementById("btn-close");
+  var btnPlay       = document.getElementById("btn-play");
+  var btnPrev       = document.getElementById("btn-prev");
+  var btnNext       = document.getElementById("btn-next");
+  var btnLyrics     = document.getElementById("btn-lyrics");
+  var progressBar   = document.getElementById("progressBar");
+  var volumeBar     = document.getElementById("volumeBar");
+  var tActual       = document.getElementById("tActual");
+  var tTotal        = document.getElementById("tTotal");
+  
+  var iconPlay      = document.getElementById("icon-play");
+  var audio         = document.getElementById("audio");
+
+  /* ---- CARGAR AUDIO (sin AudioContext para no cortar el volumen) ---- */
+  audio.src    = ARCHIVO_AUDIO;
+  audio.volume = 0.85;
+  audio.load();
+
+  /* ---- LANDING → REPRODUCTOR ---- */
+  btnEntrar.addEventListener("click", function() {
+    screenLanding.classList.add("saliendo");
+    setTimeout(function() {
+      screenLanding.style.visibility = "hidden";
+      screenPlayer.classList.add("visible");
+      document.getElementById("brand-watermark").classList.add("visible");
+      audio.play().catch(function(e) { console.log("Error:", e); });
+    }, 800);
+  });
+
+  /* ---- VOLVER A PORTADA ---- */
+  btnClose.addEventListener("click", function() {
+    audio.pause();
+    audio.currentTime = 0;
+    idxActual = -1;
+    colLyrics.classList.remove("visible");
+    btnLyrics.classList.remove("visible", "activo");
+    screenPlayer.classList.remove("visible");
+    setTimeout(function() {
+      screenLanding.style.visibility = "visible";
+      screenLanding.classList.remove("saliendo");
+      document.getElementById("brand-watermark").classList.remove("visible");
+    }, 400);
+  });
+
+  /* ---- PLAY / PAUSA ---- */
+  var SVG_PLAY  = '<path d="M8 5v14l11-7z"/>';
+  var SVG_PAUSE = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+
+  btnPlay.addEventListener("click", function() {
+    if (audio.paused) {
+      audio.play().catch(function(e) { console.log("Error:", e); });
+    } else {
+      audio.pause();
+    }
+  });
+
+  audio.addEventListener("play", function() {
+    iconPlay.innerHTML = SVG_PAUSE;
+    btnLyrics.classList.add("visible"); // mostrar botón de letras
+  });
+
+  audio.addEventListener("pause", function() {
+    iconPlay.innerHTML = SVG_PLAY;
+  });
+
+  /* ---- BOTÓN LETRAS ---- */
+  var letrasVisibles = false;
+
+  btnLyrics.addEventListener("click", function() {
+    letrasVisibles = !letrasVisibles;
+    if (letrasVisibles) {
+      colLyrics.classList.add("visible");
+      btnLyrics.classList.add("activo");
+      btnLyrics.title = "Cerrar letra";
+    } else {
+      colLyrics.classList.remove("visible");
+      btnLyrics.classList.remove("activo");
+      btnLyrics.title = "Ver letra";
+    }
+  });
+
+  /* ---- PROGRESO ---- */
+  audio.addEventListener("loadedmetadata", function() {
+    progressBar.max = audio.duration;
+    tTotal.textContent = fmt(audio.duration);
+  });
+
+  audio.addEventListener("timeupdate", function() {
+    if (!audio.seeking) {
+      progressBar.value = audio.currentTime;
+      tActual.textContent = fmt(audio.currentTime);
+      sincronizarLetra(audio.currentTime);
+    }
+  });
+
+  progressBar.addEventListener("input", function() {
+    audio.currentTime = parseFloat(this.value);
+  });
+
+  /* ---- VOLUMEN ---- */
+  volumeBar.addEventListener("input", function() {
+    audio.volume = parseFloat(this.value);
+  });
+
+  /* ---- ANTERIOR / SIGUIENTE ---- */
+  btnPrev.addEventListener("click", function() {
+    audio.currentTime = Math.max(0, audio.currentTime - 10);
+  });
+
+  btnNext.addEventListener("click", function() {
+    audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10);
+  });
+
+  function fmt(s) {
+    if (isNaN(s) || s === Infinity) return "0:00";
+    return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+  }
+
+  /* Shuffle y Repeat (decorativos — toggle visual) */
+  var shuffleOn = false;
+  var repeatOn  = false;
+
+  document.getElementById("btn-shuffle").addEventListener("click", function() {
+    shuffleOn = !shuffleOn;
+    this.style.color = shuffleOn ? "rgba(255,255,255,0.95)" : "";
+  });
+
+  document.getElementById("btn-repeat").addEventListener("click", function() {
+    repeatOn = !repeatOn;
+    this.style.color = repeatOn ? "rgba(255,255,255,0.95)" : "";
+    audio.loop = repeatOn;
+  });
+
+  /* ====================================================
+     SISTEMA DE LETRAS — VENTANA DE 5 LÍNEAS
+     ----------------------------------------------------
+     En vez de renderizar toda la letra y hacer scroll,
+     mostramos SOLO 5 líneas en cada momento:
+       pos -2: 2 antes de la activa (muy tenue)
+       pos -1: 1 antes de la activa (tenue)
+       pos  0: la activa (grande y blanca)
+       pos +1: 1 después (tenue)
+       pos +2: 2 después (muy tenue)
+     Cuando cambia la línea activa, actualizamos
+     el texto y los atributos data-pos de cada slot.
+  ==================================================== */
+  var lyricsWindow = document.getElementById("lyrics-window");
+  var idxActual    = -1;
+
+  /* Crear los 5 slots fijos en el DOM */
+  var SLOTS       = 5;
+  var SLOT_OFFSET = 2; /* índice del slot central (0-based) */
+  var slots       = [];
+
+  for (var s = 0; s < SLOTS; s++) {
+    var pos  = s - SLOT_OFFSET; /* -2, -1, 0, 1, 2 */
+    var div  = document.createElement("div");
+    div.classList.add("lw-line");
+    div.setAttribute("data-pos", pos);
+
+    var span = document.createElement("span");
+    div.appendChild(span);
+
+    /* Click en cualquier slot salta al tiempo de esa línea */
+    (function(slotEl) {
+      slotEl.addEventListener("click", function() {
+        var lineaIdx = idxActual + parseInt(slotEl.getAttribute("data-pos"));
+        if (lineaIdx >= 0 && lineaIdx < LETRA.length) {
+          audio.currentTime = LETRA[lineaIdx].t;
+          if (audio.paused) audio.play().catch(function(){});
+        }
+      });
+    })(div);
+
+    lyricsWindow.appendChild(div);
+    slots.push(div);
+  }
+
+  /* Actualizar el contenido de los 5 slots según el índice activo */
+  function renderSlots(idx) {
+    slots.forEach(function(slot, s) {
+      var pos      = s - SLOT_OFFSET; /* -2, -1, 0, +1, +2 */
+      var lineaIdx = idx + pos;
+      var span     = slot.querySelector("span");
+
+      slot.setAttribute("data-pos", pos);
+
+      /* Limpiar clases de estilo especial */
+      slot.classList.remove("musical", "final");
+
+      if (lineaIdx >= 0 && lineaIdx < LETRA.length) {
+        span.textContent = LETRA[lineaIdx].txt;
+        if (LETRA[lineaIdx].estilo) slot.classList.add(LETRA[lineaIdx].estilo);
+        slot.style.visibility = "visible";
+      } else {
+        /* Fuera de rango: slot vacío */
+        span.textContent     = "";
+        slot.style.visibility = "hidden";
+      }
+    });
+  }
+
+  /* Sincronizar con el tiempo del audio */
+  function sincronizarLetra(tiempo) {
+    /* Buscar la línea activa según el tiempo actual */
+    var idx = -1;
+    for (var i = LETRA.length - 1; i >= 0; i--) {
+      if (tiempo >= LETRA[i].t) { idx = i; break; }
+    }
+
+    if (idx === idxActual) return; /* nada cambió */
+    idxActual = idx;
+
+    if (idx === -1) {
+      /* Antes de la primera línea: limpiar todo */
+      slots.forEach(function(s) {
+        s.querySelector("span").textContent = "";
+        s.style.visibility = "hidden";
+      });
+      return;
+    }
+
+    renderSlots(idx);
+  }
+
+  /* Renderizar estado inicial (antes de que empiece el audio) */
+  renderSlots(0);
+</script>
+
+<!-- Marca de agua global -->
+<div id="brand-watermark">Antify乂Bhs-RM</div>
+
+</body>
+</html>
